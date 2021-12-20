@@ -2,7 +2,7 @@ import time
 import board
 import neopixel
 from words import Word
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 RED = (255, 0, 0)
@@ -29,7 +29,7 @@ i = 0
 ORDER = neopixel.GRB
 
 pixels = neopixel.NeoPixel(
-    pixel_pin, num_pixels, brightness=0.5, auto_write=True, pixel_order=ORDER
+    pixel_pin, num_pixels, brightness=0.5, auto_write=False, pixel_order=ORDER
 )
 
 pixels.fill((0,0,0))
@@ -58,18 +58,17 @@ def getPixels(word: Word):
             pxls.append(lastPxl)
     return pxls
 
-def lightUp(word: Word , pixels: neopixel.NeoPixel , color = ([255,255,255])):
-    if(word.getWordDirection() == Word.HORIZONTAL):
-        first = getFirstPixel(word)
-        last = getFirstPixel(word) + word.getWordLength()
-        pixels[first:last] = [color] * word.getWordLength()
-        print(word.getWord() + " " + str(word.getxCorr()) +" " + str(word.getyCorr()) + " " + str(first))
+def lightUp(color = ([255,255,255]), *words):
+    for word in words[0]: 
+        if(word.getWordDirection() == Word.HORIZONTAL):
+            first = getFirstPixel(word)
+            last = getFirstPixel(word) + word.getWordLength()
+            pixels[first:last] = [color] * word.getWordLength()
 
-    else:
-        first = getFirstPixel(word)
-        last = getFirstPixel(word) + (word.getWordLengt()-1) * num_columns
-        pixels[first:last:num_columns] = [color] * word.getWordLength()
-        print(word.getWord() + " " + str(word.getxCorr()) +" " + str(word.getyCorr()) + " " + str(first))
+        else:
+            first = getFirstPixel(word)
+            last = getFirstPixel(word) + (word.getWordLengt()-1) * num_columns
+            pixels[first:last:num_columns] = [color] * word.getWordLength()
 
         
 def getHour(hour) -> Word:
@@ -89,12 +88,45 @@ def getHour(hour) -> Word:
     }
     return switcher.get(hour)
 
+def getTimePhrase(time) -> Word:
+    words = [es, isch]
+    hNow = getHour(int(time.strftime("%I")))
+    h1h = getHour((int(time.strftime("%I"))%12)+1)
+    min = int(time.strftime("%M"))
 
-def setTimeOnClock(time: datetime, pixels):
+    if(min<5):
+        words += [hNow]
+    elif(min >= 5 and 10 > min):
+        words += [füf, ab, hNow]
+    elif(min >= 10 and 15 > min):
+        words += [zäh, ab, hNow]
+    elif(min >= 15 and 20 > min):
+        words += [viertu, ab, hNow]
+    elif(min >= 20 and 25 > min):
+        words +=  [zwänzg, ab, hNow]
+    elif(min >= 25 and 30 > min):
+        words +=  [füf, vor, haubi, h1h]
+    elif(min >= 30 and 35 > min):
+        words +=  [haubi, h1h]
+    elif(min >= 35 and 40 > min):
+        words +=  [füf, ab, haubi, h1h]
+    elif(min >= 40 and 45 > min):
+        words +=  [zwänzg, vor, h1h]
+    elif(min >= 45 and 50 > min):
+        words +=  [viertu, vor, h1h]
+    elif(min >= 50 and 55 > min):
+        words +=  [zäh, vor, h1h]
+    elif(min >= 55):
+        words +=  [füf, vor, h1h]
+    
+    return words
+
+
+def setTimeOnClock(words, pixels: neopixel.NeoPixel):
     pixels.fill((0,0,0))
-    lightUp(es, pixels)
-    lightUp(isch, pixels)
-    lightUp(getHour(time), pixels)
+    lightUp((255,255,255), words)
+    pixels.write()
+    # lightUp((255,255,255), [getHour(int(time.strftime("%I")))])
 
 wTime = datetime.now()
 
@@ -121,5 +153,9 @@ zäni =  Word("zäni", 1, 10, Word.HORIZONTAL)
 eufi =  Word("eufi", 9, 11, Word.HORIZONTAL)
 zwöufi =  Word("zwöufi", 7, 7, Word.HORIZONTAL)
 
+dt_string = "20/12/2021 00:00:00"
+wtime = datetime.strptime(dt_string, "%d/%m/%Y %H:%M:%S")
 
-setTimeOnClock(wTime, pixels)
+for counter in range(0,86400):
+    setTimeOnClock(getTimePhrase(wtime + timedelta(minutes=counter)), pixels)
+    time.sleep(0.2)
