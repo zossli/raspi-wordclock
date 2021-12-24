@@ -1,8 +1,11 @@
 import time
 import board
 import neopixel
+from still import Still
 from words import Word
 from datetime import datetime, timedelta
+from wordlist import *
+import sys
 
 
 RED = (255, 0, 0)
@@ -58,7 +61,7 @@ def getPixels(word: Word):
             pxls.append(lastPxl)
     return pxls
 
-def lightUp(color = ([255,255,255]), *words):
+def lightUpWords(color = ([255,255,255]), *words):
     for word in words[0]: 
         if(word.getWordDirection() == Word.HORIZONTAL):
             first = getFirstPixel(word)
@@ -67,7 +70,7 @@ def lightUp(color = ([255,255,255]), *words):
 
         else:
             first = getFirstPixel(word)
-            last = getFirstPixel(word) + (word.getWordLengt()-1) * num_columns
+            last = getFirstPixel(word) + (word.getWordLength()) * num_columns
             pixels[first:last:num_columns] = [color] * word.getWordLength()
 
         
@@ -89,7 +92,7 @@ def getHour(hour) -> Word:
     return switcher.get(hour)
 
 def getTimePhrase(time) -> Word:
-    words = [es, isch]
+    words = [es, ischzit]
     hNow = getHour(int(time.strftime("%I")))
     h1h = getHour((int(time.strftime("%I"))%12)+1)
     min = int(time.strftime("%M"))
@@ -117,45 +120,22 @@ def getTimePhrase(time) -> Word:
     elif(min >= 50 and 55 > min):
         words +=  [zäh, vor, h1h]
     elif(min >= 55):
-        words +=  [füf, vor, h1h]
-    
+        words +=  [füf, vor, h1h]   
     return words
 
 
 def setTimeOnClock(words, pixels: neopixel.NeoPixel):
     pixels.fill((0,0,0))
-    lightUp((255,255,255), words)
-    pixels.write()
-    # lightUp((255,255,255), [getHour(int(time.strftime("%I")))])
+    lightUpWords((255,255,255), words)
+
+if len(sys.argv) > 1:
+    runType = sys.argv[1]
+
+if(runType == "startup"):
+    Still.heart(pixels)
+    time.sleep(10)
 
 wTime = datetime.now()
+setTimeOnClock(getTimePhrase(wTime), pixels)
 
-
-es =  Word("es", 2, 1, Word.HORIZONTAL)
-isch =  Word("isch", 5, 1, Word.HORIZONTAL)
-füf =  Word("füf", 10, 1, Word.HORIZONTAL)
-zäh =  Word("zäh", 7, 2, Word.HORIZONTAL)
-viertu =  Word("viertu", 1, 2, Word.HORIZONTAL)
-zwänzg =  Word("zwänzg", 2, 3, Word.HORIZONTAL)
-ab =  Word("ab", 2, 4, Word.HORIZONTAL)
-vor =  Word("vor", 9, 4, Word.HORIZONTAL)
-haubi =  Word("haubi", 4, 5, Word.HORIZONTAL)
-eis =  Word("eis", 1, 6, Word.HORIZONTAL)
-zwöi =  Word("zwöi", 4, 9, Word.HORIZONTAL)
-drüü =  Word("drüü", 9, 10, Word.HORIZONTAL)
-vieri =  Word("vieri", 6, 8, Word.HORIZONTAL)
-füfi =  Word("füfi", 1, 12, Word.HORIZONTAL)
-sächsi =  Word("sächsi", 3, 6, Word.HORIZONTAL)
-sibni =  Word("sibni", 7, 6, Word.HORIZONTAL)
-achti =  Word("achti", 1, 8, Word.HORIZONTAL)
-nüni =  Word("nüni", 6, 12, Word.HORIZONTAL)
-zäni =  Word("zäni", 1, 10, Word.HORIZONTAL)
-eufi =  Word("eufi", 9, 11, Word.HORIZONTAL)
-zwöufi =  Word("zwöufi", 7, 7, Word.HORIZONTAL)
-
-dt_string = "20/12/2021 00:00:00"
-wtime = datetime.strptime(dt_string, "%d/%m/%Y %H:%M:%S")
-
-for counter in range(0,86400):
-    setTimeOnClock(getTimePhrase(wtime + timedelta(minutes=counter)), pixels)
-    time.sleep(0.2)
+pixels.show()
