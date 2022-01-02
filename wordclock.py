@@ -32,7 +32,7 @@ i = 0
 ORDER = neopixel.GRB
 
 pixels = neopixel.NeoPixel(
-    pixel_pin, num_pixels, brightness=0.5, auto_write=False, pixel_order=ORDER
+    pixel_pin, num_pixels, brightness=0.2, auto_write=False, pixel_order=ORDER
 )
 
 pixels.fill((0,0,0))
@@ -133,6 +133,12 @@ if len(sys.argv) > 1:
 
 if(runType == "startup"):
     Still.heart(pixels)
+    time.sleep(10)
+
+
+
+if(runType == "smiley"):
+    Still.smiley(pixels)
     time.sleep(10)
 
 wTime = datetime.now()
