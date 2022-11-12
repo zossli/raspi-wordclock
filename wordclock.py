@@ -1,12 +1,14 @@
+import random
+import sys
 import time
+from datetime import datetime, timedelta
+
 import board
 import neopixel
-from still import Still
-from words import Word
-from datetime import datetime, timedelta
-from wordlist import *
-import sys
 
+from still import Still
+from wordlist import *
+from words import Word
 
 RED = (255, 0, 0)
 YELLOW = (255, 150, 0)
@@ -32,7 +34,7 @@ i = 0
 ORDER = neopixel.GRB
 
 pixels = neopixel.NeoPixel(
-    pixel_pin, num_pixels, brightness=0.2, auto_write=False, pixel_order=ORDER
+    pixel_pin, num_pixels, brightness=0.10, auto_write=False, pixel_order=ORDER
 )
 
 pixels.fill((0,0,0))
@@ -92,36 +94,52 @@ def getHour(hour) -> Word:
     return switcher.get(hour)
 
 def getTimePhrase(time) -> Word:
-    words = [es, ischzit]
+    words = []
+    if(bool(random.getrandbits(1)) or runType=="fastrun"):
+      words = [es, ischzit]
     hNow = getHour(int(time.strftime("%I")))
     h1h = getHour((int(time.strftime("%I"))%12)+1)
     min = int(time.strftime("%M"))
 
-    if(min<5):
+    changeBrightness(time)
+
+    if(min<3):
         words += [hNow]
-    elif(min >= 5 and 10 > min):
+    elif(min >= 3 and 8 > min):
         words += [füf, ab, hNow]
-    elif(min >= 10 and 15 > min):
+    elif(min >= 8 and 12 > min):
         words += [zäh, ab, hNow]
-    elif(min >= 15 and 20 > min):
+    elif(min >= 12 and 17 > min):
         words += [viertu, ab, hNow]
-    elif(min >= 20 and 25 > min):
+    elif(min >= 17 and 22 > min):
         words +=  [zwänzg, ab, hNow]
-    elif(min >= 25 and 30 > min):
+    elif(min >= 22 and 27 > min):
         words +=  [füf, vor, haubi, h1h]
-    elif(min >= 30 and 35 > min):
+    elif(min >= 27 and 32 > min):
         words +=  [haubi, h1h]
-    elif(min >= 35 and 40 > min):
+    elif(min >= 32 and 37 > min):
         words +=  [füf, ab, haubi, h1h]
-    elif(min >= 40 and 45 > min):
+    elif(min >= 37 and 42 > min):
         words +=  [zwänzg, vor, h1h]
-    elif(min >= 45 and 50 > min):
+    elif(min >= 42 and 47 > min):
         words +=  [viertu, vor, h1h]
-    elif(min >= 50 and 55 > min):
+    elif(min >= 47 and 52 > min):
         words +=  [zäh, vor, h1h]
-    elif(min >= 55):
-        words +=  [füf, vor, h1h]   
+    elif(min >= 52 and 57 > min):
+        words +=  [füf, vor, h1h]
+    elif(min >= 57 and 60 > min):
+        words +=  [h1h]
     return words
+
+def changeBrightness(time):
+    hour = int(time.strftime("%H"))
+    print(hour)
+    if( hour >= 23 or (hour > 3 and hour < 5)):
+        pixels.brightness = 0.03
+    elif( hour <= 3):
+        pixels.brightness = 0.015
+    else:
+        pixels.brightness = 0.10
 
 
 def setTimeOnClock(words, pixels: neopixel.NeoPixel):
@@ -130,16 +148,29 @@ def setTimeOnClock(words, pixels: neopixel.NeoPixel):
 
 if len(sys.argv) > 1:
     runType = sys.argv[1]
+if len(sys.argv) > 2:
+    print(sys.argv[2])
+    pixels.brightness = float(sys.argv[2])
 
 if(runType == "startup"):
     Still.heart(pixels)
     time.sleep(10)
 
-
-
 if(runType == "smiley"):
     Still.smiley(pixels)
     time.sleep(10)
+
+if(runType == "fastrun"):
+    wTimeZero = datetime.now()
+    for xi in range((60*24)):
+        wTime = wTimeZero + timedelta(minutes=xi)
+        setTimeOnClock(getTimePhrase(wTime), pixels)
+        pixels.show()
+        time.sleep(0.02)
+
+
+if(runType == "happy"):
+    print("hallo")
 
 wTime = datetime.now()
 setTimeOnClock(getTimePhrase(wTime), pixels)
